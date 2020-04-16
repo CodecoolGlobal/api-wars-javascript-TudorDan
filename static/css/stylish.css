@@ -1,0 +1,13 @@
+body {
+    color: #177199;
+    font-weight: bold;
+}
+
+.navbar {
+    background-color: azure;
+    border: 1px solid #E7E7E7;
+}
+
+.fa-dragon {
+    color: springgreen;
+}

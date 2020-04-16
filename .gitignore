@@ -102,3 +102,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+
+# STUDENT ADDED FILES
+/node_modules
+.stylelintrc.json
+package-lock.json
