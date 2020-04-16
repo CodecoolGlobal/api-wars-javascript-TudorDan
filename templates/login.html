@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    <div class="container mt-3">
+        <p class="h1">User Login</p>
+
+        <form action="/registration" method="post" class="mt-4">
+            <div class="form-group">
+                <label for="user">User name:</label>
+                <input type="text" class="form-control" id="user" name="form-username" placeholder="Enter user name">
+                {% if user_ok == False %}
+                    <div class="alert alert-danger" role="alert">
+                        Username already exists! Choose another one!
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" id="password" name="form-password"
+                       aria-describedby="userName"
+                       placeholder="Enter password">
+                <small id="password" class="form-text text-muted">We'll never share your password with anyone
+                    else.</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+{% endblock %}
