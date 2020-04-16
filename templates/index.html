@@ -11,29 +11,35 @@
                 <li class="nav-item active ml-2">
                     <a class="nav-link" href="#">Planet list <span class="sr-only">(current)</span></a>
                 </li>
-                <li class="nav-item ml-2">
-                    <a class="nav-link" href="#">Voting statistics</a>
-                </li>
+                {% if session['logged_in'] %}
+                    <li class="nav-item ml-2">
+                        <a class="nav-link" href="#">Voting statistics</a>
+                    </li>
+                {% endif %}
                 <li class="nav-item ml-2">
                     <a class="nav-link" href="/registration">Registration</a>
                 </li>
                 <li class="nav-item ml-2">
-                    <a class="nav-link" href="#">Login</a>
+                    <a class="nav-link" href="/user-login">Login</a>
                 </li>
                 <li class="nav-item ml-2">
-                    <a class="nav-link" href="#">Logout</a>
+                    <a class="nav-link" href="/user-logout">Logout</a>
                 </li>
 
             </ul>
             <span class="navbar-text mr-3">
-              Signed in as
+                {% if session['logged_in'] %}
+                    Signed in as {{ session['username'] }}
+                {% else %}
+                    Not signed in
+                {% endif %}
             </span>
         </div>
     </nav>
 
     <p class="h1 ml-5 mt-3">Star Wars universe planets</p>
     <div class="ml-5 mt-3 mb-3">
-        <a href="#" class="btn btn-secondary btn-lg" role="button">Previous</a>
+        <a href="#" class="btn btn-secondary btn-lg disabled" role="button">Previous</a>
         <a href="#" class="btn btn-primary btn-lg" role="button">Next</a>
     </div>
 
@@ -58,6 +64,9 @@
             <td></td>
             <td></td>
             <td></td>
+            {% if session['logged_in'] %}
+                <td><button type="button" class="btn btn-light">Vote</button></td>
+            {% endif %}
         </tr>
         </tbody>
     </table>

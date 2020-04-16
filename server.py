@@ -40,6 +40,28 @@ def add_new_user():
     return render_template('add_new_user.html', user_ok=user_ok)
 
 
+@app.route('/user-login', methods=['GET', 'POST'])
+def login():
+    user_ok = True
+    if request.method == 'POST':
+        username = request.form['form-username']
+        password = request.form['form-password']
+
+        user_dict = data_manger.get_all_user_data_by_username(username)
+        if user_dict is None or data_manger.verify_password(password, user_dict['password']) is False:
+            user_ok = False
+        else:
+            session['logged_in'] = True
+            session['username'] = username
+            return redirect(url_for('index'))
+    return render_template('login.html', user_ok=user_ok)
+
+
+@app.route('/user-logout')
+def logout():
+    session.clear()
+    session['logged_in'] = False
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':

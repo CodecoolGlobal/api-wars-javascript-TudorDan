@@ -34,3 +34,14 @@ def add_new_user(cursor, username, hashed_password):
                     """,
                    {'username': username,
                     'hashed_password': hashed_password})
+
+
+@database_common.connection_handler
+def get_all_user_data_by_username(cursor, username):
+    cursor.execute("""
+                        SELECT * FROM users
+                        WHERE username = %(username)s;
+                        """,
+                   {'username': username})
+    user_dict = cursor.fetchone()
+    return user_dict
