@@ -214,10 +214,10 @@ function showStatistics() {
         .then(stats => {
             let planetDict = {};
             for(let dictionary of stats) {
-                if (!(dictionary.planet_name in planetDict)) {
+                if (planetDict[dictionary.planet_name] === undefined) {
                     planetDict[dictionary.planet_name] = 1;
                 } else {
-                    planetDict[dictionary] += 1;
+                    planetDict[dictionary.planet_name]++;
                 }
             }
 
