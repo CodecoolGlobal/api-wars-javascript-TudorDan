@@ -4,8 +4,14 @@ let nextUrl;
 const nextButton = document.querySelector('#nextButton');
 const prevButton = document.querySelector('#prevButton');
 let allPersons = [];
+let modalTitle = document.querySelector('#modalTitle');
+let modalBody = document.querySelector('.modal-body');
+let table = document.querySelector('#planets-table');
+let logged = table.dataset.loggedIn === 'True';
+let userId = Number(table.dataset.userId);
+let nrOfPages = 0;
 
-async function getPlanets(page) {
+async function getPlanets(page, votes) {
     let response = await fetch(page);
     let data = await response.json();
 
@@ -13,29 +19,53 @@ async function getPlanets(page) {
     nextUrl = data.next;
 
     setPagination(prevUrl, nextUrl);
-    displayPlanets(data.results);
+    displayPlanets(data.results, votes);
 }
 
-function displayPlanets(planets) {
+function displayPlanets(planets, votes) {
     if (planets) {
-        let table = document.querySelector('#planets-table');
         let tbody = table.querySelector('tbody');
-        let logged = table.dataset.loggedIn === 'True';
         tbody.innerHTML = '';
         for (let planet of planets) {
+            let planetId;
+            if (planet.url.charAt(planet.url.length - 3) === '/') {
+                planetId = Number(planet.url.slice(planet.url.length - 2, planet.url.length - 1));
+            } else {
+                planetId = Number(planet.url.slice(planet.url.length - 3, planet.url.length - 1));
+            }
             // Check if user login
             let voteButton = '';
             if (logged) {
-                voteButton = `
-                <td><button type="button" class="btn btn-outline-secondary">Vote</button></td>
-                `;
+                let voted = false;
+                for (let element of votes) {
+                    console.log(`element.planet_id: ${typeof (element.user_id)}`);
+                    console.log(`planetId: ${typeof (userId)}`);
+                    if (element.planet_id === planetId && element.user_id === userId) {
+                        voted = true;
+                        break;
+                    }
+                }
+                if (voted) {
+                    voteButton = `
+                    <td>
+                        <button  class="btn btn-outline-success" disabled>Voted!</button>
+                    </td>
+                    `;
+                } else {
+                    voteButton = `
+                    <td>
+                        <button type="submit" class="btn btn-outline-secondary" 
+                        onclick="showVote('${planet.name}','${planetId}')">Vote</button>
+                    </td>
+                    `;
+                }
             }
-            // Check if residents number > 0
+            // Check if planet has residents
             let residentsButton = 'No known residents';
             if (planet.residents.length > 0) {
                 residentsButton = `
                 <button type="button" class="btn btn-outline-secondary" 
-                onclick="showModal('${planet.url}')">${planet.residents.length} resident(s)</button>
+                onclick="showModal('${planet.url}', '${planet.name}')">${planet.residents.length} resident(s)</button>
                 `;
             }
             // Generate table
@@ -77,22 +107,29 @@ function setPagination(prevUrl, nextUrl) {
 }
 
 function nextClick() {
-    if (nextUrl !== 'null') {
-        getPlanets(nextUrl);
-    }
+    fetch('/api/get-votes')
+        .then(votes => votes.json())
+        .then(votes => {
+            if (nextUrl !== 'null') {
+                getPlanets(nextUrl, votes);
+            }
+        });
 }
 
 function prevClick() {
-    if (prevUrl !== 'null') {
-        getPlanets(prevUrl);
-    }
+    fetch('/api/get-votes')
+        .then(votes => votes.json())
+        .then(votes => {
+            if (prevUrl !== 'null') {
+                getPlanets(prevUrl, votes);
+            }
+        });
 }
 
-function showModal(planet) {
-    console.log(allPersons);
+function showModal(planetUrl, planetName) {
     let specificPlanetResidents = []
     for (let person of allPersons) {
-        if (person.homeworld === planet) {
+        if (person.homeworld === planetUrl) {
             specificPlanetResidents.push(person)
         }
     }
@@ -112,9 +149,10 @@ function showModal(planet) {
         </tr>
         `;
     }
-    document.querySelector('.modal-body').innerHTML = `
+    modalTitle.innerHTML = `Residents of ${planetName}`;
+    modalBody.innerHTML = `
     <table class="table table-bordered table-light table-striped table-responsive-md">
-        <thead>
+        <thead class="table-secondary">
             <tr>
                 <th>Name</th>
                 <th>Height</th>
@@ -134,16 +172,36 @@ function showModal(planet) {
     $('#modalComponent').modal('show');
 }
 
-function getallPersons() {
+function getAllPersons() {
     let urlPersons = 'http://swapi.dev/api/people/?page=';
     let temp = '';
-    for (let i = 1; i < 10; i++) {
+    //getResidentsMetadata();
+    //setTimeout(() => {
+    for (let i = 1; i <= nrOfPages; i++) {
         temp = urlPersons.concat(`${i}`);
-        getOnePagePeople(temp);
+        getOnePagePersons(temp);
     }
+    //}, 500);
 }
 
-function getOnePagePeople(urlPersons) {
+function getResidentsMetadata() {
+
+    fetch('http://swapi.dev/api/people')
+        .then(info => info.json())
+        .then(info => {
+            let totalRes = Number(info.count);
+            let resPerPag = Number(info.results.length);
+            if (resPerPag !== 0) {
+                nrOfPages = Math.floor(totalRes / resPerPag);
+                if (totalRes % resPerPag !== 0) {
+                    nrOfPages += 1;
+                }
+            }
+            getAllPersons();
+        });
+}
+
+function getOnePagePersons(urlPersons) {
     fetch(urlPersons)
         .then(data => data.json())
         .then(data => {
@@ -154,13 +212,66 @@ function getOnePagePeople(urlPersons) {
         })
 }
 
+function showStatistics() {
+    modalTitle.innerHTML = 'Statistics';
+    modalBody.innerHTML = `test`;
+    $('#modalComponent').modal('show');
+}
+
+function showVote(planetName, planetId) {
+    let data = {
+        'planet_id': planetId,
+        'planet_name': planetName
+    }
+
+    let settings = {
+        'method': 'POST',
+        'headers': {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data),
+    }
+    let button = event.target;
+    fetch('/api/insert-vote', settings)
+        .then((serverResponse) => {
+            return serverResponse.json();
+        })
+        .then((jsonResponse) => {
+            console.log(jsonResponse);
+            if (jsonResponse['success']) {
+                modalTitle.innerHTML = 'Voting ';
+                modalBody.innerHTML = `${planetName} was voted!`;
+                $('#modalComponent').modal('show');
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-outline-success');
+                button.setAttribute('disabled', '');
+                button.innerText = 'Voted!';
+                button.removeAttribute('onclick');
+            }
+        })
+}
+
+function getPageData() {
+    fetch('/api/get-votes')
+        .then(votes => votes.json())
+        .then(votes => {
+            getPlanets(urlApi, votes);
+        })
+}
+
 function init() {
-    getPlanets(urlApi);
+    getPageData();
 
     nextButton.addEventListener('click', nextClick);
     prevButton.addEventListener('click', prevClick);
 
-    getallPersons();
+    getResidentsMetadata();
+
+    if (logged) {
+        const statisticsButton = document.querySelector('#statistics');
+        statisticsButton.addEventListener('click', showStatistics);
+    }
 }
 
 init();

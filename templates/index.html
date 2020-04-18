@@ -17,7 +17,7 @@
                 </li>
                 {% if session['logged_in'] %}
                     <li class="nav-item ml-2">
-                        <a class="nav-link" href="#">Voting statistics</a>
+                        <a class="nav-link" id="statistics" href="#">Voting statistics</a>
                     </li>
                     <li class="nav-item ml-2">
                         <a class="nav-link" href="/user-logout">Logout</a>
@@ -50,8 +50,8 @@
     </div>
 
     <table class="table table-bordered table-hover table-striped table-responsive-lg" id="planets-table"
-           data-logged-in="{{ session['logged_in'] }}">
-        <thead>
+           data-logged-in="{{ session['logged_in'] }}" data-user-id="{{ session['user_id'] }}">
+        <thead class="table-secondary">
             <tr>
                 <th>Name</th>
                 <th>Diameter</th>
@@ -76,11 +76,11 @@
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Residents</h5>
+                    <h5 class="modal-title" id="modalTitle"></h5>
                 </div>
                 <div class="modal-body"></div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

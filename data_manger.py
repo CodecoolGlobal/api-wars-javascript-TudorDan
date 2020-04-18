@@ -1,5 +1,6 @@
 import database_common
 import bcrypt
+import datetime
 
 
 def hash_password(plain_text_password):
@@ -45,3 +46,36 @@ def get_all_user_data_by_username(cursor, username):
                    {'username': username})
     user_dict = cursor.fetchone()
     return user_dict
+
+
+@database_common.connection_handler
+def get_user_id_by_username(cursor, username):
+    cursor.execute("""
+                    SELECT id FROM users
+                    WHERE username = %(username)s;
+                    """,
+                   {'username': username})
+    user_dict = cursor.fetchone()
+    return user_dict['id']
+
+
+@database_common.connection_handler
+def add_planet_vote(cursor, planet_id, planet_name, user_id):
+    submission_time = datetime.datetime.now().strftime('%Y-%b-%d %H:%M:%S')
+    cursor.execute("""
+                    INSERT INTO "planet-votes" (planet_id, planet_name, user_id, submission_time)
+                    VALUES (%(planet_id)s, %(planet_name)s, %(user_id)s, %(submission_time)s);
+                    """,
+                   {'planet_id': planet_id,
+                    'planet_name': planet_name,
+                    'user_id': user_id,
+                    'submission_time': submission_time})
+
+
+@database_common.connection_handler
+def get_votes(cursor):
+    cursor.execute("""
+                    SELECT planet_id, user_id FROM "planet-votes";
+                    """)
+    list_of_dict = cursor.fetchall()
+    return list_of_dict
