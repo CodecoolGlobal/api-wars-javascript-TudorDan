@@ -36,10 +36,9 @@ function displayPlanets(planets, votes) {
             // Check if user login
             let voteButton = '';
             if (logged) {
+                // Check if planet was voted
                 let voted = false;
                 for (let element of votes) {
-                    console.log(`element.planet_id: ${typeof (element.user_id)}`);
-                    console.log(`planetId: ${typeof (userId)}`);
                     if (element.planet_id === planetId && element.user_id === userId) {
                         voted = true;
                         break;
@@ -151,7 +150,7 @@ function showModal(planetUrl, planetName) {
     }
     modalTitle.innerHTML = `Residents of ${planetName}`;
     modalBody.innerHTML = `
-    <table class="table table-bordered table-light table-striped table-responsive-md">
+    <table class="table table-bordered table-light table-striped table-responsive-md text-center">
         <thead class="table-secondary">
             <tr>
                 <th>Name</th>
@@ -175,13 +174,10 @@ function showModal(planetUrl, planetName) {
 function getAllPersons() {
     let urlPersons = 'http://swapi.dev/api/people/?page=';
     let temp = '';
-    //getResidentsMetadata();
-    //setTimeout(() => {
     for (let i = 1; i <= nrOfPages; i++) {
         temp = urlPersons.concat(`${i}`);
         getOnePagePersons(temp);
     }
-    //}, 500);
 }
 
 function getResidentsMetadata() {
@@ -213,9 +209,43 @@ function getOnePagePersons(urlPersons) {
 }
 
 function showStatistics() {
-    modalTitle.innerHTML = 'Statistics';
-    modalBody.innerHTML = `test`;
-    $('#modalComponent').modal('show');
+    fetch('/api/get-statistics')
+        .then(info => info.json())
+        .then(stats => {
+            let planetDict = {};
+            for(let dictionary of stats) {
+                if (!(dictionary.planet_name in planetDict)) {
+                    planetDict[dictionary.planet_name] = 1;
+                } else {
+                    planetDict[dictionary] += 1;
+                }
+            }
+
+            let body = '';
+            for (let [key, value] of Object.entries(planetDict)) {
+                body += `
+                <tr>
+                    <td>${key}</td>
+                    <td>${value}</td>
+                </tr>
+                `;
+            }
+            modalTitle.innerHTML = 'Statistics';
+            modalBody.innerHTML = `
+            <table class="table table-bordered table-light table-striped table-responsive-md text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Planet Name</th>
+                        <th>Number of Votes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${body}
+                </tbody>
+            </table>
+            `;
+            $('#modalComponent').modal('show');
+        })
 }
 
 function showVote(planetName, planetId) {
@@ -232,6 +262,7 @@ function showVote(planetName, planetId) {
         },
         body: JSON.stringify(data),
     }
+
     let button = event.target;
     fetch('/api/insert-vote', settings)
         .then((serverResponse) => {
@@ -243,6 +274,7 @@ function showVote(planetName, planetId) {
                 modalTitle.innerHTML = 'Voting ';
                 modalBody.innerHTML = `${planetName} was voted!`;
                 $('#modalComponent').modal('show');
+
                 button.classList.remove('btn-outline-secondary');
                 button.classList.add('btn-outline-success');
                 button.setAttribute('disabled', '');

@@ -49,17 +49,6 @@ def get_all_user_data_by_username(cursor, username):
 
 
 @database_common.connection_handler
-def get_user_id_by_username(cursor, username):
-    cursor.execute("""
-                    SELECT id FROM users
-                    WHERE username = %(username)s;
-                    """,
-                   {'username': username})
-    user_dict = cursor.fetchone()
-    return user_dict['id']
-
-
-@database_common.connection_handler
 def add_planet_vote(cursor, planet_id, planet_name, user_id):
     submission_time = datetime.datetime.now().strftime('%Y-%b-%d %H:%M:%S')
     cursor.execute("""
@@ -76,6 +65,15 @@ def add_planet_vote(cursor, planet_id, planet_name, user_id):
 def get_votes(cursor):
     cursor.execute("""
                     SELECT planet_id, user_id FROM "planet-votes";
+                    """)
+    list_of_dict = cursor.fetchall()
+    return list_of_dict
+
+
+@database_common.connection_handler
+def obtain_statistics(cursor):
+    cursor.execute("""
+                    SELECT * FROM "planet-votes";
                     """)
     list_of_dict = cursor.fetchall()
     return list_of_dict
