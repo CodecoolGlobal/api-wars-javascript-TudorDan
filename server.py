@@ -67,7 +67,6 @@ def logout():
 
 @app.route('/vote/<planet_name>/<planet_id>')
 def vote_planet(planet_name, planet_id):
-    # user_id = data_manger.get_user_id_by_username(session['username'])
     data_manger.add_planet_vote(int(planet_id), planet_name, session['user_id'])
     return render_template('index.html')
 
@@ -76,7 +75,6 @@ def vote_planet(planet_name, planet_id):
 @is_logged_in
 def insert_vote():
     request_content = request.json
-    # user_id = data_manger.get_user_id_by_username(session['username'])
     data_manger.add_planet_vote(int(request_content['planet_id']), request_content['planet_name'], session['user_id'])
     return jsonify({'success': True})
 
