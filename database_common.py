@@ -3,58 +3,33 @@ import os
 import psycopg2
 import psycopg2.extras
 
-import os
-import psycopg2
-import urllib
-
-
-
 
 def get_connection_string():
     # setup connection string
     # to do this, please define these environment variables first
-    # user_name = os.environ.get('PSQL_USER_NAME')
-    # password = os.environ.get('PSQL_PASSWORD')
-    # host = os.environ.get('PSQL_HOST')
-    # database_name = os.environ.get('PSQL_DB_NAME')
+    user_name = os.environ.get('PSQL_USER_NAME')
+    password = os.environ.get('PSQL_PASSWORD')
+    host = os.environ.get('PSQL_HOST')
+    database_name = os.environ.get('PSQL_DB_NAME')
 
-    # HEROKU SETTINGS
-    # user_name = 'awwrktadtltzph'
-    # password = "k5-]|!*?P8.),yj/']"
-    # host = 'ec2-46-137-84-140.eu-west-1.compute.amazonaws.com'
-    # database_name = 'dcqk90p9njpkv5'
-    #
-    # env_variables_defined = user_name and password and host and database_name
-    #
-    # if env_variables_defined:
-    #     # this string describes all info for psycopg2 to connect to the database
-    #     return 'postgresql://{user_name}:{password}@{host}/{database_name}'.format(
-    #         user_name=user_name,
-    #         password=password,
-    #         host=host,
-    #         database_name=database_name
-    #     )
-    # else:
-    #     raise KeyError('Some necessary environment variable(s) are not defined')
-    database_url = 'postgres://awwrktadtltzph:4fcb18a98186fd63b0097b813b329c2a06a45877ab6e84ae624b269f7a058354@ec2-46' \
-                   '-137-84-140.eu-west-1.compute.amazonaws.com:5432/dcqk90p9njpkv5'
-    # return process.env.DATABASE_URL
-    return database_url
+    env_variables_defined = user_name and password and host and database_name
+
+    if env_variables_defined:
+        # this string describes all info for psycopg2 to connect to the database
+        return 'postgresql://{user_name}:{password}@{host}/{database_name}'.format(
+            user_name=user_name,
+            password=password,
+            host=host,
+            database_name=database_name
+        )
+    else:
+        raise KeyError('Some necessary environment variable(s) are not defined')
 
 
 def open_database():
     try:
-        urllib.parse.uses_netloc.append('postgres')
-        url = urllib.parse.urlparse(os.environ.get('DATABASE_URL'))
-        connection = psycopg2.connect(
-            database=url.path[1:],
-            user=url.username,
-            password=url.password,
-            host=url.hostname,
-            port=url.port
-        )
-        # connection_string = get_connection_string()
-        # connection = psycopg2.connect(connection_string)
+        connection_string = get_connection_string()
+        connection = psycopg2.connect(connection_string)
         connection.autocommit = True
     except psycopg2.DatabaseError as exception:
         print('Database connection problem')
