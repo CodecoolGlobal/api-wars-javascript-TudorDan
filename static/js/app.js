@@ -1,4 +1,4 @@
-let urlApi = 'http://swapi.dev/api/planets/?page=1';
+let urlApi = 'https://swapi.dev/api/planets/?page=1';
 let prevUrl;
 let nextUrl;
 const nextButton = document.querySelector('#nextButton');
@@ -15,8 +15,8 @@ async function getPlanets(page, votes) {
     let response = await fetch(page);
     let data = await response.json();
 
-    prevUrl = data.previous;
-    nextUrl = data.next;
+    prevUrl = data.previous === null ? data.previous : 'https' + data.previous.slice(4);
+    nextUrl = data.next === null ? data.next : 'https' + data.next.slice(4);
 
     setPagination(prevUrl, nextUrl);
     displayPlanets(data.results, votes);
@@ -27,6 +27,7 @@ function displayPlanets(planets, votes) {
         let tbody = table.querySelector('tbody');
         tbody.innerHTML = '';
         for (let planet of planets) {
+            planet.url = 'https' + planet.url.slice(4);
             let planetId;
             if (planet.url.charAt(planet.url.length - 3) === '/') {
                 planetId = Number(planet.url.slice(planet.url.length - 2, planet.url.length - 1));
@@ -128,6 +129,7 @@ function prevClick() {
 function showModal(planetUrl, planetName) {
     let specificPlanetResidents = []
     for (let person of allPersons) {
+        person.homeworld = 'https' + person.homeworld.slice(4);
         if (person.homeworld === planetUrl) {
             specificPlanetResidents.push(person)
         }
@@ -168,11 +170,13 @@ function showModal(planetUrl, planetName) {
         </tbody>
     </table>
     `;
-    $('#modalComponent').modal('show');
+    $('#modalComponent').modal('show').on('hidden.bs.modal', () => {
+        window.location.reload();
+    });
 }
 
 function getAllPersons() {
-    let urlPersons = 'http://swapi.dev/api/people/?page=';
+    let urlPersons = '//swapi.dev/api/people/?page=';
     let temp = '';
     for (let i = 1; i <= nrOfPages; i++) {
         temp = urlPersons.concat(`${i}`);
@@ -181,8 +185,8 @@ function getAllPersons() {
 }
 
 function getResidentsMetadata() {
-
-    fetch('http://swapi.dev/api/people')
+    // get number of pages starting with "swapi.dev/api/people/?page="
+    fetch('//swapi.dev/api/people')
         .then(info => info.json())
         .then(info => {
             let totalRes = Number(info.count);
@@ -213,7 +217,7 @@ function showStatistics() {
         .then(info => info.json())
         .then(stats => {
             let planetDict = {};
-            for(let dictionary of stats) {
+            for (let dictionary of stats) {
                 if (planetDict[dictionary.planet_name] === undefined) {
                     planetDict[dictionary.planet_name] = 1;
                 } else {
@@ -269,7 +273,6 @@ function showVote(planetName, planetId) {
             return serverResponse.json();
         })
         .then((jsonResponse) => {
-            console.log(jsonResponse);
             if (jsonResponse['success']) {
                 modalTitle.innerHTML = 'Voting ';
                 modalBody.innerHTML = `${planetName} was voted!`;
